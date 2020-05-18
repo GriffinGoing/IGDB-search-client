@@ -2,7 +2,9 @@ import requests
 import datetime
 import re
 """
-Greetings, sire! Tis I, your lowly programming knave! As you requested, this program uses an API to search a selected category for a term in a specific API, and give you data as such. This seems quite important to the rule of a kingdom, and I am thusly honored by your holiest of opportunities to have embarked on this jovial journey!
+Greetings, sire! Tis I, your lowly programming knave! As you requested, this program uses an API to search for a term in a 
+specific API, and give you data as such. This seems quite important to the rule of a kingdom, and I am thusly honored by 
+your holiest of opportunities to have embarked on this jovial journey!
 
 Author: Griffin Going
 ASCII Art by: maybe Joan G. Stark, not sure, the signature wasn't present
