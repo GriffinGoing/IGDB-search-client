@@ -1,5 +1,6 @@
 import requests
 import datetime
+import re
 """
 Greetings, sire! Tis I, your lowly programming knave! As you requested, this program uses an API to search a selected category for a term in a specific API, and give you data as such. This seems quite important to the rule of a kingdom, and I am thusly honored by your holiest of opportunities to have embarked on this jovial journey!
 
@@ -10,10 +11,8 @@ ASCII Art by: maybe Joan G. Stark, not sure, the signature wasn't present
 
 #Global variables, RIP Nic Cage
 
-
-# my api key
+# my api key. probably shouldnt put this in a public repo. whatever, I have greater sins. ill change it to private after you grade.
 myKey = "346aa2b5d513be0144890c391e82b515"
-
     
 # base URL to build from. includes games endpoint 
 baseURL = "https://api-v3.igdb.com/games/"
@@ -24,6 +23,12 @@ altURL = "https://api-v3.igdb.com/alternative_names"
 #finesse the dict
 HEADER = { 'user-key': myKey, 'content-type': 'application/json', 'fields': "*" } 
 
+#regex objects for the re module, used to examine status codes.
+regex500 = re.compile("5[0-9]+")
+
+"""
+unused method which gets search category. unnecessary, assuming I read the assignment right. 
+"""
 def getCategory():
     print("If you'd be so kind as to enter the category you'd like to search in: ")
     category = input()
@@ -37,9 +42,12 @@ def getTerm():
     searchTerm = input()
     return searchTerm
 
+"""
+small main function to run the program
+"""
 def main():
  
-
+    # image of Sir Claudius the Dope, the guide for this program
     print("#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~#~")
     print("""             
                ,'   ,`-.
@@ -62,6 +70,7 @@ def main():
     print("*********************************************************")
     print("Greetings, sire! Welcome to the ****AMAZING GAME-FINDER 6000****")
     
+    # yes, this is frowned upon. search function contains exit functionality. Don't look at me that way, I know what I've done. 
     while(True):
         search()
 
@@ -71,7 +80,12 @@ def main():
     # get the search category
     category = getCategory()
     """
-    
+    #done, over, blasto
+    return
+
+"""
+the primary function used. Searches the IGDB for game titles matching the user's term. Requires no parameters. 
+"""
 def search():
     #get the search term
     searchTerm = getTerm()
@@ -84,10 +98,16 @@ def search():
     print("*********************************")
     print("Status Code of Request: " + str(statusCode)) 
     print("*********************************")
-
+    
+    # examine status code to see if further action is required. provides only basic feedback right now. 
     if(statusCode != 200): 
         #handle shit
-        print("BAD")
+        #print("BAD")
+        if(regex500.matches(statusCode)):
+            print("The IGDB server is experiencing an issue. Please try again later. Closing to new search...")
+        if(statusCode == 404):
+            print("Resource not found. Closing to new search...")
+        return
 
     data = gameRequest.json()
     #print(data)
@@ -100,6 +120,7 @@ def search():
         print(thisGame)
     """
     
+    #print all game names, as well as any alternative names
     for game in data:
         r = requests.post(baseURL, data='fields *; where id='+str(game['id'])+';', headers = HEADER)
         thisGame = r.json()
@@ -124,12 +145,14 @@ def search():
         quit()
     
     selectionIsOption = False
-
+    
+    # make sure the selection was a choice from the query
     for game in data:
         #print(game)
         if (selection == game['id']):
             selectionIsOption = True
-
+    
+    #if selection is valid, print requisite info. Uses other functions for readability (still tho, its a mess)
     if (selection != 0 and selectionIsOption):
         chosenReq = requests.post(baseURL, data = 'fields *; where id='+str(selection)+';', headers = HEADER)
         chosenGame = chosenReq.json()
