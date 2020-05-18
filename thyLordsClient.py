@@ -80,17 +80,17 @@ def search():
 
     gameRequest = requests.post(baseURL, data='search "' + searchTerm + '";', headers = HEADER)
     statusCode = gameRequest.status_code
-
-    print("Status Code of Request: ", end = '') 
-    print(statusCode)
-    print("\n")
+    
+    print("*********************************")
+    print("Status Code of Request: " + str(statusCode)) 
+    print("*********************************")
 
     if(statusCode != 200): 
         #handle shit
         print("BAD")
 
     data = gameRequest.json()
-    print(data)
+    #print(data)
     
     """
     for game in data:
@@ -100,12 +100,10 @@ def search():
         print(thisGame)
     """
     
-    gameCounter = 1 #to use as index, subtract 1
     for game in data:
         r = requests.post(baseURL, data='fields *; where id='+str(game['id'])+';', headers = HEADER)
         thisGame = r.json()
         print(str(thisGame[0]['id']) + ". " + thisGame[0]['name'])
-        gameCounter = gameCounter + 1
         
         if ('alternative_names' in thisGame[0].keys()):
             for altId in thisGame[0]['alternative_names']:
@@ -125,50 +123,105 @@ def search():
     except:
         quit()
     
+    selectionIsOption = False
 
-    if (selection != 0 and (selection in data)):
+    for game in data:
+        #print(game)
+        if (selection == game['id']):
+            selectionIsOption = True
+
+    if (selection != 0 and selectionIsOption):
         chosenReq = requests.post(baseURL, data = 'fields *; where id='+str(selection)+';', headers = HEADER)
         chosenGame = chosenReq.json()
+        #print(chosenGame)
         print("**********************************************")
         print(chosenGame[0]['name'])
         print("Category: " + lookupCategory(chosenGame[0]['category']))
-
-        try:
-            print(chosenGame[0]['dlcs'])
-        except:
-            print("No DLC")
         
+        print("DLC:")
         try:
-            print(chosenGame[0]['expansions'])
+            for game in chosenGame[0]['dlcs']:
+                #print (game)
+                lookupDLC(str(game))
         except:
-            print("No expansions")
+            print(" - no dlc")
+        
+        print("Expansions: ")
+        try:
+            #print(chosenGame[0]['expansions'])
+            for game in chosenGame[0]['expansions']:
+                lookupDLC(str(game))
+        except:
+            print(" - no expansions")
 
         print("First Release: " + getTime(chosenGame[0]['first_release_date']))
-        
+       
+        print("Game Engines: ")
         try:
-            print(chosenGame[0]['game_engines'])
+            #print(chosenGame[0]['game_engines'])
+            for engine in chosenGame[0]['game_engines']:
+                lookupGameEngine(str(engine), True)
         except:
-            print("Game Engines not available")
+            print(" -   not available")
+        
+        print("Genres: ")
+        #print(chosenGame[0]['genres'])
+        try:
+            for platform in chosenGame[0]['genres']:
+                lookupGameEngine(str(platform), False)
+        except:
+            print(" -   not available")
 
-        print(chosenGame[0]['genres'])
         print("Rating: " + str(chosenGame[0]['rating']))
         print("Summary: " + chosenGame[0]['summary'])
         print("**********************************************")
+        
+    elif(selection != 0 and not selectionIsOption):
+        print("That ID is not from the above selection. Beginning new search...")
 
+"""
+Method for looking up game engines and platforms. Can easily be adapted via the use of a dictionary to change the URL.
+Originally for looking up gaming engines exclusively, but hey, abstracting and all. Name is due for a refactor.
+Accepts the ID to look up and a boolean parameter (true for engine, false for genres). Should change boolean to key values
+for a dictionary, but such a thing would take time and this is due.
+"""
+def lookupGameEngine(lookupId, engine):
+    if (engine):
+        lookupURL = "https://api-v3.igdb.com/game_engines"
+    else:
+        lookupURL = "https://api-v3.igdb.com/genres"
+    r = requests.post(lookupURL, data = 'fields *; where id='+lookupId+';', headers = HEADER)
+    data = r.json()
+    print(" -   " + data[0]['name'])
 
+"""
+method to look up the corresponding value from the IGDB category enum to the category number.
+Parameters: catNum - the category number
+"""
 def lookupCategory(catNum):
     categories = ["Main Game", "DLC AddOn", "Expansion", "Bundle", "Standalone Expansion", "Mod", "Episode"]
     return categories[catNum]
 
-def lookupDLC(dlcArray):
-    for id in dlcArray:
-        return 0
+"""
+Comparable to other lookup methods, this accepts the dlc id and prints the corresponding dlc name.
+"""
+def lookupDLC(dlcId):
+    r = requests.post(baseURL, data = 'fields *; where id='+dlcId+';', headers = HEADER)
+    dlc = r.json()
+    #print(dlc)
+    print(" -   " + dlc[0]['name'])
 
-
+"""
+method serving to help readable in the main function. Converts a unxi time stamp to readable format.
+Parameters: unixTime, a unix time stamp
+"""
 def getTime(unixTime):
     time = datetime.datetime.fromtimestamp(int(unixTime)).strftime('%Y-%m-%d %H:%M:%S')
     return time
 
+"""
+Does what it say. Quits.
+"""
 def quit():
     print("*** O K A Y  B Y E E E ***")
     exit(0)
